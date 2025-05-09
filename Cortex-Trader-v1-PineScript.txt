@@ -1,0 +1,41 @@
+
+//@version=5
+indicator("Cortex-Trader-v1", overlay=true)
+
+// === Settings ===
+fastEMA = input.int(9, title="Fast EMA")
+slowEMA = input.int(21, title="Slow EMA")
+rsiLength = input.int(14, title="RSI Length")
+overbought = input.int(70)
+oversold = input.int(30)
+atrLength = input.int(14)
+riskMultiplier = input.float(1.5, title="Risk Multiplier")
+
+// === Indicators ===
+emaFast = ta.ema(close, fastEMA)
+emaSlow = ta.ema(close, slowEMA)
+rsi = ta.rsi(close, rsiLength)
+atr = ta.atr(atrLength)
+
+// === Entry Conditions ===
+longCondition = ta.crossover(emaFast, emaSlow) and rsi < oversold
+shortCondition = ta.crossunder(emaFast, emaSlow) and rsi > overbought
+
+// === Plot Buy/Sell ===
+plotshape(longCondition, title="Buy Signal", location=location.belowbar, color=color.green, style=shape.labelup, text="BUY")
+plotshape(shortCondition, title="Sell Signal", location=location.abovebar, color=color.red, style=shape.labeldown, text="SELL")
+
+// === SL/TP Calculation ===
+longSL = close - atr * riskMultiplier
+longTP = close + atr * riskMultiplier
+shortSL = close + atr * riskMultiplier
+shortTP = close - atr * riskMultiplier
+
+// === Plot Labels ===
+if (longCondition)
+    label.new(bar_index, close, "Stop", style=label.style_labeldown, color=color.red, textcolor=color.white, y=longSL)
+    label.new(bar_index, close, "Target", style=label.style_labelup, color=color.purple, textcolor=color.white, y=longTP)
+
+if (shortCondition)
+    label.new(bar_index, close, "Stop", style=label.style_labelup, color=color.red, textcolor=color.white, y=shortSL)
+    label.new(bar_index, close, "Target", style=label.style_labeldown, color=color.purple, textcolor=color.white, y=shortTP)
